@@ -26,13 +26,13 @@ function StatCard({
         "rounded-xl border p-3 transition-colors",
         alert
           ? "border-rose-500/30 bg-rose-500/10"
-          : "border-white/5 bg-white/5"
+          : "border-hairline/5 bg-hairline/5"
       )}
     >
       <div
         className={cn(
           "flex items-center gap-2",
-          alert ? "text-rose-300" : "text-slate-400"
+          alert ? "text-rose-500 dark:text-rose-300" : "text-ink-muted"
         )}
       >
         <Icon className="h-3.5 w-3.5" />
@@ -44,12 +44,12 @@ function StatCard({
         <span
           className={cn(
             "text-2xl font-semibold",
-            alert ? "text-rose-200" : "text-white"
+            alert ? "text-rose-600 dark:text-rose-200" : "text-ink"
           )}
         >
           {value}
         </span>
-        {suffix && <span className="text-xs text-slate-500">{suffix}</span>}
+        {suffix && <span className="text-xs text-ink-subtle">{suffix}</span>}
       </div>
     </div>
   );
@@ -103,13 +103,13 @@ export function FleetStats() {
       </div>
 
       <div className="space-y-1.5">
-        <div className="flex items-center gap-1.5 px-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+        <div className="flex items-center gap-1.5 px-1 text-[11px] font-medium uppercase tracking-wide text-ink-muted">
           <Activity className="h-3.5 w-3.5" />
           Fleet roster
         </div>
         <ul className="space-y-1.5">
           {filtered.length === 0 && (
-            <li className="rounded-xl border border-white/5 bg-white/[0.02] px-3 py-4 text-center text-xs text-slate-500">
+            <li className="rounded-xl border border-hairline/5 bg-hairline/[0.03] px-3 py-4 text-center text-xs text-ink-subtle">
               No couriers match “{searchQuery}”.
             </li>
           )}
@@ -125,17 +125,17 @@ export function FleetStats() {
                     "flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left transition-colors",
                     selected
                       ? "border-accent/40 bg-accent-soft"
-                      : "border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"
+                      : "border-hairline/5 bg-hairline/[0.03] hover:bg-hairline/[0.07]"
                   )}
                 >
                   <div className="min-w-0">
-                    <p className="flex items-center gap-1.5 truncate text-sm font-medium text-white">
+                    <p className="flex items-center gap-1.5 truncate text-sm font-medium text-ink">
                       {courier.name}
                       {delayed && (
                         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
                       )}
                     </p>
-                    <p className="truncate text-xs text-slate-500">
+                    <p className="truncate text-xs text-ink-subtle">
                       {courier.callSign} · {courier.orderId}
                     </p>
                   </div>

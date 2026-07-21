@@ -1,18 +1,27 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import Map, { Layer, NavigationControl, Source } from "react-map-gl";
 import type { MapRef } from "react-map-gl";
-import type { MapLayerMouseEvent } from "mapbox-gl";
-import type { Feature, LineString } from "geojson";
+import type { MapLayerMouseEvent, Map as MapboxMap } from "mapbox-gl";
+import type { Feature, LineString, Position } from "geojson";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import { useFleetStore } from "@/store/useFleetStore";
+import { useThemeStore } from "@/store/useThemeStore";
 import { MAP_DEFAULTS } from "@/lib/fleetData";
 import { ORDER_DENSITY, SERVICE_AREA } from "@/lib/mapData";
 import { CourierMarker } from "./CourierMarker";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+const MAP_STYLES = {
+  dark: "mapbox://styles/mapbox/dark-v11",
+  light: "mapbox://styles/mapbox/light-v11",
+} as const;
+
+/** 3D building extrusion colour per theme. */
+const BUILDING_COLOR = { dark: "#1b2436", light: "#cbd4e2" } as const;
 
 /**
  * Full-screen Mapbox GL map (dark-v11) tilted into a 3D perspective with
@@ -25,32 +34,49 @@ export function LiveMap() {
   const selectedCourierId = useFleetStore((s) => s.selectedCourierId);
   const selectCourier = useFleetStore((s) => s.selectCourier);
   const layers = useFleetStore((s) => s.layers);
+  const routeLines = useFleetStore((s) => s.routeLines);
+  const theme = useThemeStore((s) => s.theme);
+
+  // Keep the latest theme available to imperative Mapbox callbacks.
+  const themeRef = useRef(theme);
+  useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
 
   const selectedCourier = useMemo(
     () => couriers.find((c) => c.id === selectedCourierId) ?? null,
     [couriers, selectedCourierId]
   );
 
-  /** LineString from the selected courier's position to its drop-off point. */
+  /**
+   * Road-following polyline from the selected courier to its drop-off, produced
+   * by the routing simulation. Falls back to a straight line if unavailable.
+   */
   const routeGeoJson = useMemo<Feature<LineString> | null>(() => {
     if (!selectedCourier) return null;
+    const line = routeLines[selectedCourier.id];
+    const coordinates: Position[] =
+      line && line.length >= 2
+        ? line.map((p) => [p.lng, p.lat])
+        : [
+            [selectedCourier.location.lng, selectedCourier.location.lat],
+            [selectedCourier.destination.lng, selectedCourier.destination.lat],
+          ];
     return {
       type: "Feature",
       properties: {},
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [selectedCourier.location.lng, selectedCourier.location.lat],
-          [selectedCourier.destination.lng, selectedCourier.destination.lat],
-        ],
-      },
+      geometry: { type: "LineString", coordinates },
     };
-  }, [selectedCourier]);
+  }, [selectedCourier, routeLines]);
 
-  /** Inject the 3D building extrusion layer once the style has loaded. */
-  const handleLoad = useCallback(() => {
-    const map = mapRef.current?.getMap();
-    if (!map) return;
+  /** Injects (or recolours) the 3D building extrusion layer for the theme. */
+  const addBuildings = useCallback((map: MapboxMap) => {
+    const color = BUILDING_COLOR[themeRef.current];
+
+    if (map.getLayer("3d-buildings")) {
+      map.setPaintProperty("3d-buildings", "fill-extrusion-color", color);
+      return;
+    }
 
     const styleLayers = map.getStyle().layers ?? [];
     const labelLayer = styleLayers.find(
@@ -58,8 +84,6 @@ export function LiveMap() {
         layer.type === "symbol" &&
         (layer.layout as { "text-field"?: unknown } | undefined)?.["text-field"]
     );
-
-    if (map.getLayer("3d-buildings")) return;
 
     map.addLayer(
       {
@@ -70,7 +94,7 @@ export function LiveMap() {
         type: "fill-extrusion",
         minzoom: 12,
         paint: {
-          "fill-extrusion-color": "#1b2436",
+          "fill-extrusion-color": color,
           "fill-extrusion-height": [
             "interpolate",
             ["linear"],
@@ -89,12 +113,20 @@ export function LiveMap() {
             13.5,
             ["get", "min_height"],
           ],
-          "fill-extrusion-opacity": 0.75,
+          "fill-extrusion-opacity": themeRef.current === "dark" ? 0.75 : 0.9,
         },
       },
       labelLayer?.id
     );
   }, []);
+
+  /** Add buildings on first load and re-add them whenever the style reloads. */
+  const handleLoad = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    addBuildings(map);
+    map.on("style.load", () => addBuildings(map));
+  }, [addBuildings]);
 
   const handleMapClick = useCallback(
     (_event: MapLayerMouseEvent) => {
@@ -105,19 +137,18 @@ export function LiveMap() {
 
   if (!MAPBOX_TOKEN) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-slate-950 p-8 text-center">
-        <div className="max-w-md rounded-2xl border border-white/10 bg-black/40 p-8 backdrop-blur-md">
-          <h2 className="text-lg font-semibold text-white">
+      <div className="flex h-screen w-screen items-center justify-center bg-canvas p-8 text-center">
+        <div className="max-w-md rounded-2xl border border-hairline/10 bg-glass/80 p-8 shadow-glass backdrop-blur-md dark:bg-glass/40">
+          <h2 className="text-lg font-semibold text-ink">
             Mapbox token missing
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-ink-muted">
             Add{" "}
-            <code className="rounded bg-white/10 px-1.5 py-0.5 text-accent">
+            <code className="rounded bg-hairline/10 px-1.5 py-0.5 text-accent">
               NEXT_PUBLIC_MAPBOX_TOKEN
             </code>{" "}
-            to your <code className="text-accent">.env.local</code> file (see
-            <code className="text-accent"> .env.example</code>) and restart the
-            dev server.
+            to your <code className="text-accent">.env.local</code> file and
+            restart the dev server.
           </p>
         </div>
       </div>
@@ -129,7 +160,7 @@ export function LiveMap() {
       ref={mapRef}
       mapboxAccessToken={MAPBOX_TOKEN}
       initialViewState={MAP_DEFAULTS}
-      mapStyle="mapbox://styles/mapbox/dark-v11"
+      mapStyle={MAP_STYLES[theme]}
       onLoad={handleLoad}
       onClick={handleMapClick}
       antialias
@@ -190,7 +221,8 @@ export function LiveMap() {
                 15,
                 50,
               ],
-              "heatmap-opacity": 0.6,
+              // Dial the intense heatmap back on the bright light basemap.
+              "heatmap-opacity": theme === "dark" ? 0.6 : 0.35,
             }}
           />
         </Source>

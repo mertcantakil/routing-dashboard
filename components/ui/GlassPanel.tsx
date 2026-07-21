@@ -19,7 +19,7 @@ export function GlassPanel({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-white/10 bg-black/40 shadow-glass backdrop-blur-md",
+        "rounded-2xl border border-hairline/10 bg-glass/80 shadow-glass backdrop-blur-md dark:bg-glass/40",
         !flush && "p-4",
         className
       )}

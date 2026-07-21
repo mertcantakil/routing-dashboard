@@ -3,31 +3,36 @@
 import { useEffect, useRef } from "react";
 import { useFleetStore } from "@/store/useFleetStore";
 import { COURIER_ROUTES, INITIAL_COURIERS } from "@/lib/fleetData";
-import type { Courier, CourierStatus, LogEvent, LogLevel, Location } from "@/types";
+import {
+  fetchRoadLoop,
+  locationAtDistance,
+  nearestDistance,
+  sliceRoute,
+  bearingBetween,
+  type RoadRoute,
+} from "@/lib/directions";
+import type {
+  Courier,
+  CourierStatus,
+  LogEvent,
+  LogLevel,
+  Location,
+} from "@/types";
 
-/** How far (in fraction of a segment) a courier advances each tick. */
+/** Fallback fraction advanced per tick before real road geometry loads. */
 const STEP = 0.06;
 /** Movement tick cadence, per the spec (~1 update / second). */
 const MOVE_INTERVAL_MS = 1000;
+/**
+ * Demo time-compression: couriers cover this many real-world seconds of travel
+ * per tick, so a full patrol loop plays out in a lively ~1-2 minutes instead of
+ * the true ~10. Movement still follows the actual road geometry and speed.
+ */
+const SIM_SPEED_FACTOR = 6;
 
 interface RouteProgress {
-  /** Index of the current waypoint the courier is heading away from. */
   segment: number;
-  /** Interpolation position (0..1) within the current segment. */
   t: number;
-}
-
-/** Compass bearing in degrees between two coordinates. */
-function bearingBetween(from: Location, to: Location): number {
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const toDeg = (r: number) => (r * 180) / Math.PI;
-  const y = Math.sin(toRad(to.lng - from.lng)) * Math.cos(toRad(to.lat));
-  const x =
-    Math.cos(toRad(from.lat)) * Math.sin(toRad(to.lat)) -
-    Math.sin(toRad(from.lat)) *
-      Math.cos(toRad(to.lat)) *
-      Math.cos(toRad(to.lng - from.lng));
-  return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
 
 function lerp(a: number, b: number, t: number): number {
@@ -71,31 +76,111 @@ function makeId(): string {
 }
 
 /**
- * Simulates a real-time fleet WebSocket. Drives smooth courier movement along
- * predefined Manhattan routes and emits live activity logs into the store.
+ * Simulates a real-time fleet WebSocket. Snaps each courier's patrol loop to the
+ * real street network via the Mapbox Directions API, then glides couriers along
+ * that road geometry (no more cutting through buildings) while emitting live
+ * activity logs. Until the road geometry resolves — or if it fails — it falls
+ * back to straight-line interpolation between the hand-authored waypoints.
  */
 export function useMockSocket() {
   const setCouriers = useFleetStore((s) => s.setCouriers);
   const updateCouriers = useFleetStore((s) => s.updateCouriers);
   const pushLog = useFleetStore((s) => s.pushLog);
   const setConnected = useFleetStore((s) => s.setConnected);
+  const setRouteLines = useFleetStore((s) => s.setRouteLines);
 
   const progressRef = useRef<RouteProgress[]>(
     INITIAL_COURIERS.map(() => ({ segment: 0, t: 0 }))
   );
+  /** Road-snapped loop per courier (null until loaded / on failure). */
+  const roadRef = useRef<(RoadRoute | null)[]>(
+    INITIAL_COURIERS.map(() => null)
+  );
+  /** Distance travelled (metres) along each courier's road loop. */
+  const distanceRef = useRef<number[]>(INITIAL_COURIERS.map(() => 0));
+  /** Distance (metres) of each courier's drop-off along its road loop. */
+  const destDistanceRef = useRef<number[]>(INITIAL_COURIERS.map(() => 0));
 
   useEffect(() => {
     setCouriers(INITIAL_COURIERS);
     setConnected(true);
 
+    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+    // Resolve real road geometry for every courier loop in parallel.
+    if (token) {
+      INITIAL_COURIERS.forEach((courier, index) => {
+        const waypoints = COURIER_ROUTES[index % COURIER_ROUTES.length];
+        const profile = courier.vehicle === "van" ? "driving" : "cycling";
+        fetchRoadLoop(waypoints, token, profile).then((road) => {
+          if (!road) return;
+          roadRef.current[index] = road;
+          destDistanceRef.current[index] = nearestDistance(
+            road,
+            courier.destination
+          );
+        });
+      });
+    }
+
     const moveTimer = setInterval(() => {
       const current = useFleetStore.getState().couriers;
       if (current.length === 0) return;
 
+      const lines: Record<string, Location[]> = {};
+
       const next: Courier[] = current.map((courier, index) => {
+        // Small, plausible speed jitter around the courier's baseline.
+        const speed = Math.max(
+          8,
+          Math.round(courier.speed + (Math.random() * 4 - 2))
+        );
+
+        // Batteries slowly drain; idle couriers sip a little less.
+        const drain =
+          courier.status === "idle" ? 0.05 : 0.15 + Math.random() * 0.2;
+        const batteryLevel = Math.max(
+          6,
+          Math.round((courier.batteryLevel - drain) * 10) / 10
+        );
+
+        const road = roadRef.current[index];
+
+        if (road && road.length > 0) {
+          // Advance along the real road geometry by the distance actually
+          // covered this tick (speed km/h → metres), time-compressed for demo.
+          const metersPerTick =
+            (speed * 1000) / 3600 * (MOVE_INTERVAL_MS / 1000) * SIM_SPEED_FACTOR;
+          const travelled =
+            (distanceRef.current[index] + metersPerTick) % road.length;
+          distanceRef.current[index] = travelled;
+
+          const { location, heading } = locationAtDistance(road, travelled);
+
+          // Remaining road distance to the drop-off (wrapping around the loop).
+          const destDist = destDistanceRef.current[index];
+          const remaining =
+            ((destDist - travelled) % road.length + road.length) % road.length;
+          const etaMinutes = Math.max(
+            1,
+            Math.round((remaining / 1000 / speed) * 60)
+          );
+
+          lines[courier.id] = sliceRoute(road, travelled, destDist);
+
+          return {
+            ...courier,
+            location,
+            heading: Math.round(heading),
+            speed,
+            etaMinutes,
+            batteryLevel,
+          };
+        }
+
+        // Fallback: straight-line interpolation between waypoints.
         const route = COURIER_ROUTES[index % COURIER_ROUTES.length];
         const progress = progressRef.current[index];
-
         let { segment, t } = progress;
         t += STEP;
         if (t >= 1) {
@@ -106,28 +191,14 @@ export function useMockSocket() {
 
         const from = route[segment];
         const to = route[(segment + 1) % route.length];
-
         const location: Location = {
           lng: lerp(from.lng, to.lng, t),
           lat: lerp(from.lat, to.lat, t),
         };
-
-        // Small, plausible speed jitter around the courier's baseline.
-        const speed = Math.max(
-          8,
-          Math.round(courier.speed + (Math.random() * 4 - 2))
-        );
-
-        // Recompute ETA from the remaining distance to the drop-off point.
         const remainingKm = distanceKm(location, courier.destination);
         const etaMinutes = Math.max(1, Math.round((remainingKm / speed) * 60));
 
-        // Batteries slowly drain; idle couriers sip a little less.
-        const drain = courier.status === "idle" ? 0.05 : 0.15 + Math.random() * 0.2;
-        const batteryLevel = Math.max(
-          6,
-          Math.round((courier.batteryLevel - drain) * 10) / 10
-        );
+        lines[courier.id] = [location, courier.destination];
 
         return {
           ...courier,
@@ -140,6 +211,7 @@ export function useMockSocket() {
       });
 
       updateCouriers(next);
+      setRouteLines(lines);
     }, MOVE_INTERVAL_MS);
 
     let logTimer: ReturnType<typeof setTimeout>;

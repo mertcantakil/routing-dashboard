@@ -8,25 +8,25 @@ const STATUS_META: Record<
   on_route: {
     label: "On route",
     dot: "bg-sky-400",
-    text: "text-sky-300",
+    text: "text-sky-600 dark:text-sky-300",
     ring: "ring-sky-400/30",
   },
   picking_up: {
     label: "Picking up",
     dot: "bg-amber-400",
-    text: "text-amber-300",
+    text: "text-amber-600 dark:text-amber-300",
     ring: "ring-amber-400/30",
   },
   delivering: {
     label: "Delivering",
     dot: "bg-emerald-400",
-    text: "text-emerald-300",
+    text: "text-emerald-600 dark:text-emerald-300",
     ring: "ring-emerald-400/30",
   },
   idle: {
     label: "Idle",
     dot: "bg-slate-400",
-    text: "text-slate-300",
+    text: "text-ink-muted",
     ring: "ring-slate-400/30",
   },
 };
@@ -36,7 +36,7 @@ export function StatusBadge({ status }: { status: CourierStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-[11px] font-medium ring-1",
+        "inline-flex items-center gap-1.5 rounded-full bg-hairline/5 px-2.5 py-1 text-[11px] font-medium ring-1",
         meta.text,
         meta.ring
       )}

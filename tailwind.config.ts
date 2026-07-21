@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -11,9 +12,15 @@ const config: Config = {
         sans: ["var(--font-montserrat)", "system-ui", "sans-serif"],
       },
       colors: {
-        surface: {
-          DEFAULT: "rgba(10, 12, 18, 0.7)",
-          muted: "rgba(148, 163, 184, 0.08)",
+        // Semantic, theme-aware tokens driven by CSS variables in globals.css.
+        // `<alpha-value>` keeps Tailwind opacity modifiers (e.g. bg-glass/60) working.
+        canvas: "rgb(var(--canvas) / <alpha-value>)",
+        glass: "rgb(var(--glass) / <alpha-value>)",
+        hairline: "rgb(var(--hairline) / <alpha-value>)",
+        ink: {
+          DEFAULT: "rgb(var(--ink) / <alpha-value>)",
+          muted: "rgb(var(--ink-muted) / <alpha-value>)",
+          subtle: "rgb(var(--ink-subtle) / <alpha-value>)",
         },
         accent: {
           DEFAULT: "#38bdf8",
@@ -21,7 +28,8 @@ const config: Config = {
         },
       },
       boxShadow: {
-        glass: "0 8px 32px rgba(0, 0, 0, 0.45)",
+        // Theme-aware via --glass-shadow (softer in light, deep in dark).
+        glass: "var(--glass-shadow)",
         glow: "0 0 20px rgba(56, 189, 248, 0.35)",
       },
       keyframes: {

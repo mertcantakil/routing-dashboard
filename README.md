@@ -17,12 +17,19 @@ nothing more than a Mapbox token.
 
 ## Features
 
-- **Full-screen 3D map** — `mapbox://styles/mapbox/dark-v11` at `pitch: 60` /
-  `bearing: -20` with live 3D building extrusions.
+- **Dark & light themes** — a header toggle flips the whole dashboard (and the
+  Mapbox basemap: `dark-v11` ↔ `light-v11`). The choice is persisted and applied
+  before hydration to avoid a flash of the wrong theme.
+- **Full-screen 3D map** — tilted to `pitch: 60` / `bearing: -20` with
+  theme-aware 3D building extrusions.
+- **Road-following routes** — courier patrol loops are snapped to the real
+  street network via the Mapbox Directions API, so couriers drive along actual
+  roads (no more cutting through buildings) and the selected-route polyline
+  traces the real path to the drop-off.
 - **Smooth courier movement** — markers glide between per-second position
   updates via CSS transitions (no jumping), rotated to match live heading.
-- **Live data simulation** — a mock socket (`useMockSocket`) moves couriers and
-  emits activity-log events every few seconds.
+- **Live data simulation** — a mock socket (`useMockSocket`) advances couriers
+  along their road geometry and emits activity-log events every few seconds.
 - **Toggleable map overlays** — a top-right Layer Control switches an order
   **heatmap**, the service-area **geofence** and a **traffic** layer on/off.
 - **Courier roster + search** — filter the fleet by name, callsign, order or id
@@ -83,10 +90,11 @@ components/
   map/                   LiveMap.tsx, CourierMarker.tsx, LayerControl.tsx
   sidebar/               FleetStats.tsx, LiveFeed.tsx, CourierSearch.tsx
   drawer/                CourierDetailDrawer.tsx (slide-in courier detail)
-  ui/                    GlassPanel, StatusBadge, Toggle, ProgressBar (primitives)
+  ui/                    GlassPanel, StatusBadge, Toggle, ProgressBar, ThemeToggle
 hooks/                   useMockSocket.ts (real-time simulation)
-store/                   useFleetStore.ts (Zustand state + selectors)
-lib/                     fleetData.ts (routes & seed), mapData.ts (heatmap/geofence), cn.ts
+store/                   useFleetStore.ts, useThemeStore.ts (Zustand state)
+lib/                     fleetData.ts (seed), mapData.ts (overlays),
+                         directions.ts (Mapbox routing), cn.ts
 types/                   Courier, LogEvent, Location, LayerToggles interfaces
 ```
 
@@ -99,6 +107,13 @@ types/                   Courier, LogEvent, Location, LayerToggles interfaces
 - **Simulation** is entirely client-side. Swapping `useMockSocket` for a real
   WebSocket only requires feeding `updateCouriers` / `pushLog` from live data —
   no component changes needed.
+- **Routing** (`lib/directions.ts`) requests a road-snapped loop per courier
+  from the Mapbox Directions API once on mount, then interpolates each courier
+  along that geometry by real distance. If the request fails (or no token), it
+  gracefully falls back to straight-line interpolation between waypoints.
+- **Theming** uses CSS-variable semantic tokens (`canvas`, `glass`, `ink`,
+  `hairline`) wired into Tailwind, with `darkMode: "class"` and a small
+  `useThemeStore` driving the `dark` class on `<html>`.
 - **Map overlays** (`lib/mapData.ts`) ship as static GeoJSON: an order-density
   heatmap and the Manhattan service-area geofence polygon.
 

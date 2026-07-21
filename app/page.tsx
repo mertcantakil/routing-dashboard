@@ -8,6 +8,7 @@ import { LiveFeed } from "@/components/sidebar/LiveFeed";
 import { CourierSearch } from "@/components/sidebar/CourierSearch";
 import { LayerControl } from "@/components/map/LayerControl";
 import { CourierDetailDrawer } from "@/components/drawer/CourierDetailDrawer";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 // Mapbox GL touches `window`, so the map is loaded client-side only.
 const LiveMap = dynamic(
@@ -27,7 +28,7 @@ export default function DashboardPage() {
   useMockSocket();
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-slate-950">
+    <main className="relative h-screen w-screen overflow-hidden bg-canvas">
       <LiveMap />
 
       {/* Top-right glassmorphism layer control */}
@@ -37,18 +38,19 @@ export default function DashboardPage() {
 
       {/* Left sidebar — glassmorphism control panel */}
       <aside className="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-[360px] max-w-[86vw] flex-col gap-3 p-4">
-        <header className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 shadow-glass backdrop-blur-md">
+        <header className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-hairline/10 bg-glass/80 px-4 py-3 shadow-glass backdrop-blur-md dark:bg-glass/40">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/15 text-accent shadow-glow">
             <Navigation className="h-4.5 w-4.5" strokeWidth={2.25} />
           </span>
-          <div>
-            <h1 className="text-sm font-semibold tracking-tight text-white">
+          <div className="flex-1">
+            <h1 className="text-sm font-semibold tracking-tight text-ink">
               FleetPulse
             </h1>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-ink-muted">
               Manhattan · Live operations
             </p>
           </div>
+          <ThemeToggle />
         </header>
 
         <div className="pointer-events-auto">

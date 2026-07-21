@@ -18,26 +18,26 @@ export function Toggle({ checked, onChange, label, icon: Icon }: ToggleProps) {
       role="switch"
       aria-checked={checked}
       onClick={onChange}
-      className="flex w-full items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-white/5"
+      className="flex w-full items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-hairline/5"
     >
       <span className="flex items-center gap-2.5">
         {Icon && (
           <span
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
-              checked ? "bg-accent/15 text-accent" : "bg-white/5 text-slate-400"
+              checked ? "bg-accent/15 text-accent" : "bg-hairline/5 text-ink-muted"
             )}
           >
             <Icon className="h-3.5 w-3.5" />
           </span>
         )}
-        <span className="text-sm font-medium text-slate-200">{label}</span>
+        <span className="text-sm font-medium text-ink/90">{label}</span>
       </span>
 
       <span
         className={cn(
           "relative h-5 w-9 shrink-0 rounded-full transition-colors",
-          checked ? "bg-accent" : "bg-white/15"
+          checked ? "bg-accent" : "bg-hairline/20"
         )}
       >
         <span

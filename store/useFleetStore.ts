@@ -1,5 +1,11 @@
 import { create } from "zustand";
-import type { Courier, LayerKey, LayerToggles, LogEvent } from "@/types";
+import type {
+  Courier,
+  LayerKey,
+  LayerToggles,
+  Location,
+  LogEvent,
+} from "@/types";
 
 interface FleetState {
   couriers: Courier[];
@@ -11,6 +17,11 @@ interface FleetState {
   searchQuery: string;
   /** Visibility of the optional Mapbox overlay layers. */
   layers: LayerToggles;
+  /**
+   * Road-following polylines (courier id → coordinates) from each courier's
+   * current position to its drop-off, produced by the routing simulation.
+   */
+  routeLines: Record<string, Location[]>;
 
   setCouriers: (couriers: Courier[]) => void;
   updateCouriers: (couriers: Courier[]) => void;
@@ -19,6 +30,7 @@ interface FleetState {
   setConnected: (connected: boolean) => void;
   setSearchQuery: (query: string) => void;
   toggleLayer: (key: LayerKey) => void;
+  setRouteLines: (lines: Record<string, Location[]>) => void;
 }
 
 /** Maximum number of log events retained in memory for the live feed. */
@@ -35,6 +47,7 @@ export const useFleetStore = create<FleetState>((set) => ({
     geofence: true,
     traffic: false,
   },
+  routeLines: {},
 
   setCouriers: (couriers) => set({ couriers }),
   updateCouriers: (couriers) => set({ couriers }),
@@ -50,6 +63,7 @@ export const useFleetStore = create<FleetState>((set) => ({
     set((state) => ({
       layers: { ...state.layers, [key]: !state.layers[key] },
     })),
+  setRouteLines: (routeLines) => set({ routeLines }),
 }));
 
 /**

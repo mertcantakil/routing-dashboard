@@ -27,7 +27,7 @@ function ActionButton({
   return (
     <button
       type="button"
-      className="flex flex-1 flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-3 text-slate-300 transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
+      className="flex flex-1 flex-col items-center gap-1.5 rounded-xl border border-hairline/10 bg-hairline/5 py-3 text-ink-muted transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
     >
       <Icon className="h-4 w-4" strokeWidth={2} />
       <span className="text-[11px] font-medium">{label}</span>
@@ -60,14 +60,14 @@ export function CourierDetailDrawer() {
       <aside
         aria-hidden={!open}
         className={cn(
-          "fixed inset-y-0 right-0 z-30 flex w-[380px] max-w-[90vw] flex-col border-l border-white/10 bg-[#0a0a0a]/80 shadow-glass backdrop-blur-md transition-transform duration-500 ease-out",
+          "fixed inset-y-0 right-0 z-30 flex w-[380px] max-w-[90vw] flex-col border-l border-hairline/10 bg-glass/90 shadow-glass backdrop-blur-md transition-transform duration-500 ease-out dark:bg-glass/80",
           open ? "translate-x-0" : "translate-x-full"
         )}
       >
         {courier && (
           <>
             {/* Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-white/10 p-5">
+            <div className="flex items-start justify-between gap-3 border-b border-hairline/10 p-5">
               <div className="flex items-center gap-3">
                 <div className="relative h-14 w-14 shrink-0">
                   <Image
@@ -75,21 +75,21 @@ export function CourierDetailDrawer() {
                     alt={courier.name}
                     fill
                     sizes="56px"
-                    className="rounded-2xl border border-white/10 object-cover"
+                    className="rounded-2xl border border-hairline/10 object-cover"
                   />
                   <span
                     className={cn(
-                      "absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-[#0a0a0a]",
+                      "absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-canvas",
                       delayed ? "bg-rose-500" : "bg-emerald-400"
                     )}
                   />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="truncate text-base font-semibold text-white">
+                  <h2 className="truncate text-base font-semibold text-ink">
                     {courier.name}
                   </h2>
-                  <p className="text-xs text-slate-400">{courier.callSign}</p>
-                  <p className="mt-1 truncate text-[11px] text-slate-500">
+                  <p className="text-xs text-ink-muted">{courier.callSign}</p>
+                  <p className="mt-1 truncate text-[11px] text-ink-subtle">
                     {courier.vehicleModel} · {courier.plate}
                   </p>
                 </div>
@@ -98,7 +98,7 @@ export function CourierDetailDrawer() {
                 type="button"
                 onClick={() => selectCourier(null)}
                 aria-label="Close panel"
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-hairline/10 bg-hairline/5 text-ink-muted transition-colors hover:bg-hairline/10 hover:text-ink"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -110,11 +110,11 @@ export function CourierDetailDrawer() {
               {/* Battery / charge */}
               <section className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-1.5 font-medium text-slate-300">
+                  <span className="flex items-center gap-1.5 font-medium text-ink/90">
                     <BatteryCharging className="h-3.5 w-3.5 text-accent" />
                     Battery / Charge
                   </span>
-                  <span className="font-semibold tabular-nums text-white">
+                  <span className="font-semibold tabular-nums text-ink">
                     {Math.round(courier.batteryLevel)}%
                   </span>
                 </div>
@@ -122,9 +122,9 @@ export function CourierDetailDrawer() {
               </section>
 
               {/* Task details */}
-              <section className="space-y-3 rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+              <section className="space-y-3 rounded-2xl border border-hairline/5 bg-hairline/[0.03] p-4">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-muted">
                     <Package className="h-3.5 w-3.5" />
                     Active order
                   </span>
@@ -133,20 +133,20 @@ export function CourierDetailDrawer() {
                   </span>
                 </div>
 
-                <p className="text-sm font-medium text-white">
+                <p className="text-sm font-medium text-ink">
                   {courier.itemCount} Items · {courier.weightKg.toFixed(1)}kg
                 </p>
 
-                <div className="flex items-center gap-2 text-sm text-slate-300">
-                  <User className="h-3.5 w-3.5 text-slate-500" />
+                <div className="flex items-center gap-2 text-sm text-ink/90">
+                  <User className="h-3.5 w-3.5 text-ink-subtle" />
                   {courier.customerName}
                 </div>
 
-                <div className="rounded-xl border border-white/5 bg-black/30 p-3">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                <div className="rounded-xl border border-hairline/5 bg-hairline/[0.04] p-3">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-ink-subtle">
                     Delivery note
                   </p>
-                  <p className="mt-1 text-sm leading-snug text-slate-300">
+                  <p className="mt-1 text-sm leading-snug text-ink/90">
                     “{courier.deliveryNote}”
                   </p>
                 </div>
@@ -158,7 +158,7 @@ export function CourierDetailDrawer() {
                   "flex items-center justify-between rounded-2xl border p-4 transition-colors",
                   delayed
                     ? "border-rose-500/40 bg-rose-500/10 shadow-[0_0_24px_rgba(244,63,94,0.25)]"
-                    : "border-white/5 bg-white/[0.03]"
+                    : "border-hairline/5 bg-hairline/[0.03]"
                 )}
               >
                 <div className="flex items-center gap-2.5">
@@ -166,7 +166,7 @@ export function CourierDetailDrawer() {
                     className={cn(
                       "flex h-9 w-9 items-center justify-center rounded-xl",
                       delayed
-                        ? "bg-rose-500/20 text-rose-300"
+                        ? "bg-rose-500/20 text-rose-600 dark:text-rose-300"
                         : "bg-accent/15 text-accent"
                     )}
                   >
@@ -177,27 +177,27 @@ export function CourierDetailDrawer() {
                     )}
                   </span>
                   <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-ink-muted">
                       Estimated arrival
                     </p>
                     <p
                       className={cn(
                         "text-sm font-semibold",
-                        delayed ? "text-rose-200" : "text-white"
+                        delayed ? "text-rose-600 dark:text-rose-200" : "text-ink"
                       )}
                     >
                       {courier.etaMinutes} min
                       {delayed && (
-                        <span className="ml-1.5 text-xs font-normal text-rose-300">
+                        <span className="ml-1.5 text-xs font-normal text-rose-500 dark:text-rose-300">
                           · Delayed
                         </span>
                       )}
                     </p>
                   </div>
                 </div>
-                <span className="text-2xl font-bold tabular-nums text-white">
+                <span className="text-2xl font-bold tabular-nums text-ink">
                   {courier.etaMinutes}
-                  <span className="ml-0.5 text-xs font-medium text-slate-500">
+                  <span className="ml-0.5 text-xs font-medium text-ink-subtle">
                     min
                   </span>
                 </span>
@@ -205,7 +205,7 @@ export function CourierDetailDrawer() {
             </div>
 
             {/* Action bar */}
-            <div className="flex gap-2.5 border-t border-white/10 p-4">
+            <div className="flex gap-2.5 border-t border-hairline/10 p-4">
               <ActionButton icon={Phone} label="Call" />
               <ActionButton icon={MessageSquare} label="Message" />
               <ActionButton icon={Navigation} label="Reroute" />

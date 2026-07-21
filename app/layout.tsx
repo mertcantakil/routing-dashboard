@@ -15,13 +15,20 @@ export const metadata: Metadata = {
     "Premium real-time courier and vehicle tracking dashboard with Mapbox 3D visualisation.",
 };
 
+// Runs before hydration to apply the persisted theme and avoid a flash of the
+// wrong colour scheme. Defaults to dark when nothing is stored.
+const themeScript = `(function(){try{var t=localStorage.getItem('fleetpulse-theme')||'dark';var d=document.documentElement;d.classList.toggle('dark',t==='dark');d.style.colorScheme=t;}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={montserrat.variable}>
+    <html lang="en" className={montserrat.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );

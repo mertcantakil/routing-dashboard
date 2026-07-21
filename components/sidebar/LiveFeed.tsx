@@ -38,16 +38,16 @@ export function LiveFeed() {
 
   return (
     <GlassPanel flush className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-hairline/10 px-4 py-3">
         <div className="flex items-center gap-2">
           <Radio className="h-4 w-4 text-accent" />
-          <h3 className="text-sm font-semibold text-white">Live activity</h3>
+          <h3 className="text-sm font-semibold text-ink">Live activity</h3>
         </div>
-        <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
+        <span className="flex items-center gap-1.5 text-[11px] font-medium text-ink-muted">
           <span
             className={cn(
               "h-1.5 w-1.5 rounded-full",
-              connected ? "bg-emerald-400" : "bg-slate-500"
+              connected ? "bg-emerald-400" : "bg-ink-subtle"
             )}
           />
           {connected ? "Streaming" : "Offline"}
@@ -56,7 +56,7 @@ export function LiveFeed() {
 
       <ul className="flex-1 space-y-2 overflow-y-auto px-3 py-3">
         {logs.length === 0 && (
-          <li className="px-1 py-6 text-center text-xs text-slate-500">
+          <li className="px-1 py-6 text-center text-xs text-ink-subtle">
             Waiting for fleet activity…
           </li>
         )}
@@ -66,7 +66,7 @@ export function LiveFeed() {
           return (
             <li
               key={log.id}
-              className="flex animate-fade-slide-in items-start gap-2.5 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5"
+              className="flex animate-fade-slide-in items-start gap-2.5 rounded-xl border border-hairline/5 bg-hairline/[0.03] px-3 py-2.5"
             >
               <span
                 className={cn(
@@ -78,10 +78,10 @@ export function LiveFeed() {
                 <Icon className="h-3.5 w-3.5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm leading-snug text-slate-200">
+                <p className="text-sm leading-snug text-ink/90">
                   {log.message}
                 </p>
-                <p className="mt-0.5 text-[11px] tabular-nums text-slate-500">
+                <p className="mt-0.5 text-[11px] tabular-nums text-ink-subtle">
                   {formatTime(log.timestamp)}
                 </p>
               </div>

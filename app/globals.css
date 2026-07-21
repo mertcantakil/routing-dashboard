@@ -2,8 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   Theme tokens — light is the default (:root), dark overrides under .dark.
+   Values are space-separated RGB channels so Tailwind's `rgb(var(--x) / a)`
+   colour tokens can apply opacity modifiers.
+   ========================================================================== */
 :root {
-  color-scheme: dark;
+  --canvas: 236 240 247; /* soft slate background */
+  --glass: 255 255 255; /* frosted white panels */
+  --hairline: 15 23 42; /* slate-900 borders/fills at low alpha */
+  --ink: 15 23 42; /* primary text */
+  --ink-muted: 71 85 105; /* secondary text (slate-600) */
+  --ink-subtle: 100 116 139; /* tertiary text (slate-500) */
+  --scrollbar: 15 23 42;
+  --glass-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
+}
+
+.dark {
+  --canvas: 5 7 13;
+  --glass: 0 0 0;
+  --hairline: 255 255 255;
+  --ink: 255 255 255;
+  --ink-muted: 148 163 184;
+  --ink-subtle: 100 116 139;
+  --scrollbar: 148 163 184;
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
 }
 
 html,
@@ -13,11 +36,12 @@ body {
 
 body {
   margin: 0;
-  background-color: #05070d;
-  color: #e2e8f0;
+  background-color: rgb(var(--canvas));
+  color: rgb(var(--ink));
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 /* Slim, premium scrollbar for the live feed */
@@ -29,25 +53,26 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25);
+  background: rgb(var(--scrollbar) / 0.25);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.4);
+  background: rgb(var(--scrollbar) / 0.4);
 }
 
-/* Blend Mapbox controls with the dark glass aesthetic */
+/* Blend Mapbox controls with the active glass aesthetic */
 .mapboxgl-ctrl-group {
-  background: rgba(10, 12, 18, 0.7) !important;
+  background: rgb(var(--glass) / 0.7) !important;
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgb(var(--hairline) / 0.1) !important;
   border-radius: 12px !important;
   overflow: hidden;
 }
 .mapboxgl-ctrl-group button + button {
-  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-top: 1px solid rgb(var(--hairline) / 0.08) !important;
 }
-.mapboxgl-ctrl button .mapboxgl-ctrl-icon {
+/* Invert the default (dark) control icons only in dark mode */
+.dark .mapboxgl-ctrl button .mapboxgl-ctrl-icon {
   filter: invert(1);
 }
 .mapboxgl-ctrl-bottom-right {
