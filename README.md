@@ -7,6 +7,8 @@ and smooth micro-interactions.
 
 ![Stack](https://img.shields.io/badge/Next.js-14-black) ![Mapbox](https://img.shields.io/badge/Mapbox-GL%203D-38bdf8) ![State](https://img.shields.io/badge/State-Zustand-8b5cf6) ![Styling](https://img.shields.io/badge/Tailwind-CSS-06b6d4) ![Language](https://img.shields.io/badge/TypeScript-strict-3178c6)
 
+**Live demo:** [live-routing-dash.web.app](https://live-routing-dash.web.app)
+
 ## Overview
 
 FleetPulse simulates a live logistics operations center. Four virtual couriers
